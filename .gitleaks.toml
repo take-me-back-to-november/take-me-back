@@ -1,0 +1,11 @@
+title = "take-me-back gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Allow safe examples and ignored generated files"
+paths = [
+  '''^\.env\.example$''',
+  '''^uv\.lock$''',
+]

@@ -1,0 +1,10 @@
+.venv
+.git
+.python-version
+*.py[oc]
+.mypy_cache
+.ruff_cache
+dist
+build
+wheels
+*.egg-info

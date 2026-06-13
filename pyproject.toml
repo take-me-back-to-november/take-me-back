@@ -1,0 +1,53 @@
+[project]
+name = "take-me-back"
+version = "0.1.0"
+requires-python = ">=3.14"
+
+dependencies = [
+    "asyncpg>=0.31.0",
+    "fastapi>=0.136.3",
+    "httpx>=0.28.1",
+    "pyjwt>=2.10.1",
+    "tortoise-orm>=1.1.7",
+    "uvicorn>=0.49.0",
+]
+
+[project.scripts]
+format = "dev_tasks:format"
+lint = "dev_tasks:lint"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build]
+dev-mode-dirs = ["src", "."]
+
+[tool.hatch.build.targets.wheel]
+only-include = ["dev_tasks.py"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"dev_tasks.py" = "dev_tasks.py"
+
+[dependency-groups]
+dev = [
+    "pre-commit>=4.0.0",
+    "ruff>=0.15.16",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py314"
+src = ["src"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.basedpyright]
+venvPath = "."
+venv = ".venv"
+pythonVersion = "3.14"
+extraPaths = ["src"]
