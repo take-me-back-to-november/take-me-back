@@ -6,18 +6,21 @@ repos:
         entry: uv run ruff check --fix
         language: system
         types: [python]
+        stages: [pre-commit]
 
       - id: ruff-format
         name: ruff format
         entry: uv run ruff format
         language: system
         types: [python]
+        stages: [pre-commit]
 
       - id: gitleaks
         name: gitleaks secret scan
         entry: gitleaks protect --staged --redact --config=.gitleaks.toml
         language: system
         pass_filenames: false
+        stages: [pre-commit]
 
       - id: conventional-commit
         name: conventional commit message
