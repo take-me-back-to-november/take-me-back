@@ -28,6 +28,7 @@ async def main(user_id: UUID) -> dict:
         "name": user.name,
         "email": user.google_email,
         "picture_url": user.picture_url,
+        "spotify_connected": bool(user.spotify_refresh_token),
         "reviews_count": reviews_count,
         "reviews_average_stars": reviews_average_stars,
         "reviews": [to_song_review_response(review) for review in reviews],

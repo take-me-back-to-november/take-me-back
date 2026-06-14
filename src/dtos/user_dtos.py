@@ -67,6 +67,7 @@ class UserResumeDTO(BaseModel):
     name: str
     email: str
     picture_url: str | None
+    spotify_connected: bool
     reviews_count: int
     reviews_average_stars: float
     reviews: list[SongReviewResponseDTO]
