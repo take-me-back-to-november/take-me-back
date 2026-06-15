@@ -29,6 +29,12 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H "${{ secrets.SERVER_IPV4 }}" >> ~/.ssh/known_hosts
 
+      - name: Prepare server directory
+        run: |
+          ssh -i ~/.ssh/deploy_key \
+            "${{ secrets.USER_PROFILE }}@${{ secrets.SERVER_IPV4 }}" \
+            "mkdir -p /opt/take-me/take-me-back"
+
       - name: Copy files to server
         run: |
           rsync -avz --delete \
