@@ -7,14 +7,14 @@ from utils.jwt import create_access_jwt_token, create_refresh_token
 from utils.users import build_user_response
 
 
-async def main(body: CreateUserAndSessionDTO) -> dict:
+async def main(body: CreateUserAndSessionDTO):
     user_info = await get_user_info(body.google_id)
     google_sub = user_info.sub
 
     if not google_sub:
         raise HTTPException(401, "Invalid Google ID token")
 
-    user = await User.filter(google_id=google_sub).first()
+    user = await User.filter(google_id=google_sub, deleted_at=None).first()
 
     if not user:
         user = await User.create(

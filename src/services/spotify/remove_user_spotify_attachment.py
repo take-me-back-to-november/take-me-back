@@ -5,8 +5,8 @@ from fastapi import HTTPException, status
 from models.user import User
 
 
-async def main(user_id: UUID) -> None:
-    user = await User.get(id=user_id)
+async def main(user_id: UUID):
+    user = await User.filter(id=user_id, deleted_at=None).first()
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"

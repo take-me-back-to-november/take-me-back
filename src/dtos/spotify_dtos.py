@@ -40,3 +40,12 @@ class CurrentPlayingSongDTO(BaseModel):
     progress: int
     image_url: str
     is_playing: bool
+
+
+class SpotifyTrackReviewDataDTO(BaseModel):
+    spotify_album_id: str | None
+    spotify_artist_id: str | None
+    image_url: str | None
+    song_name: str | None
+    song_artist: str | None
+    song_album: str | None

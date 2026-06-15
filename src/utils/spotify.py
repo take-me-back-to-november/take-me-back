@@ -6,6 +6,12 @@ from uuid import UUID
 from fastapi import HTTPException, status
 
 from config.spotify import SPOTIFY_CONFIG
+from dtos.spotify_dtos import (
+    CurrentPlayingSongDTO,
+    SpotifyAlbumDTO,
+    SpotifySongDTO,
+    SpotifyTrackReviewDataDTO,
+)
 from instances.http_client import get_http_client
 from models.user import User
 
@@ -124,97 +130,112 @@ async def persist_spotify_tokens(
     await user.save()
 
 
-def normalize_current_playing_song(payload: Any) -> dict:
+def parse_spotify_track_review_data(track: dict[str, Any]) -> SpotifyTrackReviewDataDTO:
+    album = track.get("album") or {}
+    images = album.get("images") or []
+    artists = track.get("artists") or []
+    primary_artist = artists[0] if artists else {}
+    artist_names = [artist.get("name", "") for artist in artists if artist.get("name")]
+
+    return SpotifyTrackReviewDataDTO(
+        spotify_album_id=album.get("id"),
+        spotify_artist_id=primary_artist.get("id"),
+        image_url=images[0].get("url") if images else None,
+        song_name=track.get("name"),
+        song_artist=", ".join(artist_names) or None,
+        song_album=album.get("name"),
+    )
+
+
+def normalize_current_playing_song(payload: Any) -> CurrentPlayingSongDTO:
     item = payload["item"]
-    return {
-        "id": item["id"],
-        "name": item["name"],
-        "artist": item["artists"][0]["name"],
-        "album": item["album"]["name"],
-        "duration": item["duration_ms"],
-        "progress": payload["progress_ms"],
-        "image_url": item["album"]["images"][0]["url"],
-        "is_playing": payload["is_playing"],
-    }
+    album = item.get("album") or {}
+    images = album.get("images") or []
+    artists = item.get("artists") or []
+
+    return CurrentPlayingSongDTO(
+        id=item["id"],
+        name=item["name"],
+        artist=artists[0]["name"] if artists else "",
+        album=album.get("name", ""),
+        duration=item["duration_ms"],
+        progress=payload["progress_ms"],
+        image_url=images[0]["url"] if images else "",
+        is_playing=payload["is_playing"],
+    )
 
 
-def extract_track_review_metadata(track: dict) -> dict:
-    album = track.get("album")
-    images = album.get("images")
-    artists = track.get("artists")
-
-    return {
-        "image_url": images[0].get("url"),
-        "song_name": track.get("name"),
-        "song_artist": (
-            ", ".join(
-                artist.get("name", "") for artist in artists if artist.get("name")
-            )
-            or None
-        ),
-        "song_album": album.get("name"),
-    }
-
-
-def normalize_spotify_album_list(payload: Any) -> list[dict]:
+def normalize_spotify_album_list(payload: Any) -> list[SpotifyAlbumDTO]:
     items = payload.get("albums", {}).get("items", [])
-    normalized_album_list: list[dict] = []
+    albums: list[SpotifyAlbumDTO] = []
 
     for item in items:
-        images = item.get("images") or []
-        cover_url = images[0].get("url") if images else ""
-        artist_names = [artist.get("name") for artist in item.get("artists", [])]
+        if not item.get("id"):
+            continue
 
-        normalized_album_list.append(
-            {
-                "id": item["id"],
-                "type": "album",
-                "title": item["name"],
-                "artist": ", ".join(name for name in artist_names if name),
-                "year": int(item["release_date"].split("-")[0]),
-                "cover_url": cover_url,
-                "release_date": item["release_date"],
-                "total_tracks": item.get("total_tracks", 0),
-                "album_type": item.get("album_type", "album"),
-                "spotify_url": item.get("external_urls", {}).get("spotify"),
-            }
+        images = item.get("images") or []
+        artist_names = [
+            artist.get("name")
+            for artist in item.get("artists", [])
+            if artist.get("name")
+        ]
+
+        albums.append(
+            SpotifyAlbumDTO(
+                id=item["id"],
+                type="album",
+                title=item["name"],
+                artist=", ".join(artist_names),
+                year=int(item["release_date"].split("-")[0]),
+                cover_url=images[0].get("url", "") if images else "",
+                release_date=item["release_date"],
+                total_tracks=item.get("total_tracks", 0),
+                album_type=item.get("album_type", "album"),
+                spotify_url=item.get("external_urls", {}).get("spotify"),
+            )
         )
 
-    return normalized_album_list
+    return albums
 
 
-def normalize_spotify_song_list(payload: Any) -> list[dict]:
+def normalize_spotify_song_list(payload: Any) -> list[SpotifySongDTO]:
     if "tracks" in payload:
         items = payload.get("tracks", {}).get("items", [])
     else:
         items = payload.get("items", [])
 
-    normalized_song_list: list[dict] = []
+    songs: list[SpotifySongDTO] = []
 
     for item in items:
-        track_id = item.get("id")
-        album = item.get("album")
-        images = album.get("images")
-        cover_url = images[0].get("url")
-        artist_names = [artist.get("name") for artist in item.get("artists")]
+        if not item.get("id"):
+            continue
 
-        normalized_song_list.append(
-            {
-                "id": track_id,
-                "type": "track",
-                "title": item["name"],
-                "artist": ", ".join(artist_names),
-                "album_id": album["id"],
-                "album_title": album["name"],
-                "year": int(album["release_date"].split("-")[0]),
-                "cover_url": cover_url,
-                "release_date": album["release_date"],
-                "duration_ms": item.get("duration_ms", 0),
-                "explicit": bool(item.get("explicit", False)),
-                "spotify_url": item.get("external_urls", {}).get("spotify"),
-            }
+        album = item.get("album") or {}
+        images = album.get("images") or []
+        artist_names = [
+            artist.get("name")
+            for artist in item.get("artists", [])
+            if artist.get("name")
+        ]
+
+        songs.append(
+            SpotifySongDTO(
+                id=item["id"],
+                type="track",
+                title=item["name"],
+                artist=", ".join(artist_names),
+                album_id=album["id"],
+                album_title=album["name"],
+                year=int(album["release_date"].split("-")[0]),
+                cover_url=images[0].get("url", "") if images else "",
+                release_date=album["release_date"],
+                duration_ms=item.get("duration_ms", 0),
+                explicit=bool(item.get("explicit", False)),
+                spotify_url=item.get("external_urls", {}).get("spotify"),
+            )
         )
-    return normalized_song_list
+
+    return songs
 
 
 async def search_spotify(
@@ -259,7 +280,7 @@ async def refresh_spotify_access_token(user_id: str) -> None:
             detail="Spotify client credentials are not configured",
         )
 
-    user = await User.filter(id=user_id).first()
+    user = await User.filter(id=user_id, deleted_at=None).first()
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -317,4 +338,15 @@ async def ensure_spotify_access_token_is_valid(user: User) -> None:
         or user.spotify_access_token_expires_at < datetime.now(UTC)
     ):
         await refresh_spotify_access_token(str(user.id))
-        await user.refresh_from_db()
+        refreshed_user = await User.filter(id=user.id, deleted_at=None).first()
+        if not refreshed_user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found",
+            )
+
+        user.spotify_refresh_token = refreshed_user.spotify_refresh_token
+        user.spotify_access_token = refreshed_user.spotify_access_token
+        user.spotify_access_token_expires_at = (
+            refreshed_user.spotify_access_token_expires_at
+        )

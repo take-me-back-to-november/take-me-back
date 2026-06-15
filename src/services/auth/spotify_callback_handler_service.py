@@ -9,7 +9,7 @@ from utils.spotify import (
 from utils.users import get_user_by_id
 
 
-async def main(code: str, state: str) -> dict:
+async def main(code: str, state: str):
     validate_spotify_callback_params(code, state)
     client_id, client_secret, token_url = validate_spotify_credentials()
     user = await get_user_by_id(str(state))

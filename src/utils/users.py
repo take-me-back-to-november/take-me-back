@@ -18,7 +18,7 @@ def build_user_response(user: User) -> dict:
 
 
 async def get_user_by_id(user_id: str) -> User:
-    user = await User.filter(id=user_id).first()
+    user = await User.filter(id=user_id, deleted_at=None).first()
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

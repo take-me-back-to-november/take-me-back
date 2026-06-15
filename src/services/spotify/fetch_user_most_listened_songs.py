@@ -9,7 +9,7 @@ from utils.spotify import (
 from utils.users import get_user_by_id
 
 
-async def main(user_id: str, limit: int) -> list[dict]:
+async def main(user_id: str, limit: int):
     user = await get_user_by_id(user_id)
 
     if not user.spotify_refresh_token:

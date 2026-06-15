@@ -5,12 +5,13 @@ from models.abstract_base_entity import AbstractBaseEntity
 
 class SongReview(AbstractBaseEntity):
     stars_count = fields.IntField()
-    text = fields.TextField()
 
-    likes_count = fields.IntField(default=0)
-    unlikes_count = fields.IntField(default=0)
+    title = fields.CharField(max_length=50)
+    text = fields.CharField(max_length=1000)
 
     spotify_song_id = fields.CharField(max_length=255)
+    spotify_album_id = fields.CharField(max_length=255, null=True)
+    spotify_artist_id = fields.CharField(max_length=255, null=True)
 
     song_name = fields.CharField(max_length=255, null=True)
     song_artist = fields.CharField(max_length=255, null=True)

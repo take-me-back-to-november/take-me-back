@@ -9,7 +9,7 @@ from utils.spotify import (
 from utils.users import get_user_by_id
 
 
-async def main(user_id: str) -> dict | None:
+async def main(user_id: str):
     user = await get_user_by_id(user_id)
     await ensure_spotify_access_token_is_valid(user)
 
@@ -23,6 +23,8 @@ async def main(user_id: str) -> dict | None:
 
     if response.status_code == status.HTTP_204_NO_CONTENT:
         return None
+
+    print(response)
 
     if response.status_code != status.HTTP_200_OK:
         raise HTTPException(
