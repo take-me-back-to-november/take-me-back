@@ -1,4 +1,6 @@
 .venv
+.env
+.env.*
 .git
 .python-version
 *.py[oc]
