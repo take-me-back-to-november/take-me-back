@@ -25,5 +25,5 @@ async def main(code: str, state: str):
     return {
         "user_id": str(user.id),
         "spotify_connected": True,
-        "redirect_url": f"{FRONTEND_CONFIG['base_url']}/home",
+        "redirect_url": f"{FRONTEND_CONFIG['base_url']}/auth/spotify/return",
     }
