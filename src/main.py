@@ -30,6 +30,8 @@ app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(CORSMiddleware, **CORS_ARGS)
 
+app.get("/health")(lambda: {"status": "ok"})
+
 app.include_router(auth_router)
 app.include_router(me_router)
 app.include_router(spotify_router)
