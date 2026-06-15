@@ -1,0 +1,65 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout backend
+        uses: actions/checkout@v4
+
+      - name: Checkout frontend
+        uses: actions/checkout@v4
+        with:
+          repository: take-me-back-to-november/take-me-front
+          path: take-me-front
+
+      - name: Write .env
+        env:
+          ENV_FILE: ${{ secrets.ENV_FILE }}
+        run: printf '%s\n' "$ENV_FILE" > take-me-back/.env
+
+      - name: Create deployment archive
+        run: |
+          tar \
+            --exclude='.git' \
+            --exclude='.venv' \
+            --exclude='node_modules' \
+            -czf deploy.tar.gz take-me-back take-me-front
+
+      - name: Copy archive to server
+        uses: appleboy/scp-action@v1.0.0
+        with:
+          host: ${{ secrets.SERVER_IPV4 }}
+          username: ${{ secrets.USER_PROFILE }}
+          key: ${{ secrets.SSH_KEY }}
+          source: deploy.tar.gz
+          target: /opt/take-me
+
+      - name: Deploy on server
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SERVER_IPV4 }}
+          username: ${{ secrets.USER_PROFILE }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            set -euo pipefail
+
+            mkdir -p /opt/take-me
+            cd /opt/take-me
+
+            tar -xzf deploy.tar.gz
+            rm -f deploy.tar.gz
+
+            cd take-me-back
+            docker compose up -d --build --remove-orphans
+            docker image prune -f
