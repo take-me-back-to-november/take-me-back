@@ -22,21 +22,11 @@ services:
       FRONTEND_URL: ${PUBLIC_URL}
       CORS_ALLOWED_ORIGINS: ${PUBLIC_URL}
       SPOTIFY_REDIRECT_URI: ${PUBLIC_URL}/auth/spotify/callback
+    ports:
+      - "8000:8000"
     depends_on:
       database:
         condition: service_healthy
-    restart: unless-stopped
-
-  web:
-    build:
-      context: ../take-me-front
-      args:
-        VITE_API_BASE_URL: ""
-        VITE_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
-    ports:
-      - "${WEB_PORT:-5173}:5173"
-    depends_on:
-      - api
     restart: unless-stopped
 
 volumes:
