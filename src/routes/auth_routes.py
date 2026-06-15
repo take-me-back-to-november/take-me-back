@@ -12,8 +12,8 @@ router = APIRouter(prefix="/auth")
 
 
 @router.get("/login-url")
-def spotify_login_url():
-    return build_spotify_login_url()
+def spotify_login_url(return_to: str | None = Query(default=None)):
+    return build_spotify_login_url(return_to=return_to)
 
 
 @router.get("/spotify/callback")

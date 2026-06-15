@@ -2,12 +2,12 @@ from urllib.parse import urlencode
 
 from fastapi import HTTPException, status
 
-from config.frontend import FRONTEND_CONFIG
+from config.frontend import resolve_frontend_base_url
 from models.user import User
 from utils.jwt import (
     create_access_jwt_token,
     create_refresh_token,
-    verify_spotify_state_token,
+    decode_spotify_state_token,
 )
 from utils.spotify import (
     exchange_spotify_authorization_code,
@@ -48,24 +48,31 @@ async def upsert_user_from_spotify_profile(profile) -> User:
     return user
 
 
-def build_callback_redirect_url(access_token: str, refresh_token: str) -> str:
+def build_callback_redirect_url(
+    access_token: str,
+    refresh_token: str,
+    return_to: str | None = None,
+) -> str:
     fragment = urlencode(
         {
             "access_token": access_token,
             "refresh_token": refresh_token,
         }
     )
-    return f"{FRONTEND_CONFIG['base_url']}/auth/callback#{fragment}"
+    base_url = resolve_frontend_base_url(return_to)
+    return f"{base_url}/auth/callback#{fragment}"
 
 
 async def main(code: str, state: str):
     validate_spotify_callback_params(code, state)
 
-    if not verify_spotify_state_token(state):
+    state_payload = decode_spotify_state_token(state)
+    if not state_payload:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid or expired state parameter",
         )
+    return_to = state_payload.get("return_to")
 
     client_id, client_secret, token_url = validate_spotify_credentials()
     token_data = await exchange_spotify_authorization_code(
@@ -86,6 +93,8 @@ async def main(code: str, state: str):
         "user_id": str(user.id),
         "spotify_connected": True,
         "redirect_url": build_callback_redirect_url(
-            app_access_token, user.refresh_token
+            app_access_token,
+            user.refresh_token,
+            return_to if isinstance(return_to, str) else None,
         ),
     }

@@ -36,21 +36,24 @@ def create_refresh_token() -> str:
     return secrets.token_urlsafe(64)
 
 
-def create_spotify_state_token() -> str:
+def create_spotify_state_token(return_to: str | None = None) -> str:
     now = datetime.now(UTC)
+    payload: dict[str, datetime | str] = {
+        "purpose": "spotify_login_state",
+        "nonce": secrets.token_urlsafe(16),
+        "iat": now,
+        "exp": now + timedelta(minutes=10),
+    }
+    if return_to:
+        payload["return_to"] = return_to
     return jwt.encode(
-        payload={
-            "purpose": "spotify_login_state",
-            "nonce": secrets.token_urlsafe(16),
-            "iat": now,
-            "exp": now + timedelta(minutes=10),
-        },
+        payload=payload,
         key=JWT_CONFIG["secret"],
         algorithm=JWT_CONFIG["algorithm"],
     )
 
 
-def verify_spotify_state_token(token: str) -> bool:
+def decode_spotify_state_token(token: str) -> dict | None:
     algorithm = JWT_CONFIG["algorithm"] or "HS256"
     try:
         payload = jwt.decode(
@@ -59,8 +62,14 @@ def verify_spotify_state_token(token: str) -> bool:
             algorithms=[algorithm],
         )
     except jwt.InvalidTokenError:
-        return False
-    return payload.get("purpose") == "spotify_login_state"
+        return None
+    if payload.get("purpose") != "spotify_login_state":
+        return None
+    return payload
+
+
+def verify_spotify_state_token(token: str) -> bool:
+    return decode_spotify_state_token(token) is not None
 
 
 def decode_jwt_token(token: str) -> JwtPayload:
