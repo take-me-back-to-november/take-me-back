@@ -37,25 +37,17 @@ async def fetch_spotify_profile(access_token: str) -> SpotifyProfileDTO:
         headers={"Authorization": f"Bearer {access_token}"},
     )
 
+    print("--------------------------------")
+    print(response.json())
+    print("--------------------------------")
+
     if response.status_code != 200:
-        body_preview = response.text[:200] if response.text else "(empty body)"
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=(
-                f"Failed to fetch Spotify profile "
-                f"(status={response.status_code}, body={body_preview})"
-            ),
+            detail="Failed to fetch Spotify profile",
         )
 
-    try:
-        data = response.json()
-    except ValueError as exc:
-        body_preview = response.text[:200] if response.text else "(empty body)"
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Spotify profile response is not valid JSON (body={body_preview})",
-        ) from exc
-
+    data = response.json()
     images = data.get("images") or []
 
     if not data.get("id"):
