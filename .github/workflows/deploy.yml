@@ -22,24 +22,23 @@ jobs:
           ENV_FILE: ${{ secrets.ENV_FILE }}
         run: printf '%s\n' "$ENV_FILE" > .env
 
-      - name: Create deployment archive
+      - name: Setup SSH
         run: |
-          tar \
-            --exclude='.git' \
-            --exclude='.venv' \
-            --exclude='node_modules' \
-            -czf deploy.tar.gz .
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "${{ secrets.SERVER_IPV4 }}" >> ~/.ssh/known_hosts
 
-      - name: Copy archive to server
-        uses: appleboy/scp-action@v1.0.0
-        with:
-          host: ${{ secrets.SERVER_IPV4 }}
-          username: ${{ secrets.USER_PROFILE }}
-          key: ${{ secrets.SSH_KEY }}
-          source: deploy.tar.gz
-          target: /opt/take-me/take-me-back
+      - name: Copy files to server
+        run: |
+          rsync -avz --delete \
+            --exclude '.git' \
+            --exclude '.venv' \
+            --exclude 'node_modules' \
+            -e "ssh -i ~/.ssh/deploy_key" \
+            ./ "${{ secrets.USER_PROFILE }}@${{ secrets.SERVER_IPV4 }}:/opt/take-me/take-me-back/"
 
-      - name: Deploy on server
+      - name: Start with Docker Compose
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.SERVER_IPV4 }}
@@ -47,12 +46,5 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           script: |
             set -euo pipefail
-
-            mkdir -p /opt/take-me/take-me-back
             cd /opt/take-me/take-me-back
-
-            tar -xzf deploy.tar.gz
-            rm -f deploy.tar.gz
-
-            docker compose up -d --build --remove-orphans database api
-            docker image prune -f
+            docker compose up -d --build database api
