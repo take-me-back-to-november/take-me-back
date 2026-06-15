@@ -11,6 +11,9 @@ from services.spotify.fetch_spotify_tracks import main as fetch_spotify_tracks
 from services.spotify.fetch_user_most_listened_songs import (
     main as fetch_user_most_listened_songs,
 )
+from services.spotify.request_song_preview_url import (
+    main as request_song_preview_url,
+)
 
 router = APIRouter(prefix="/spotify")
 
@@ -47,3 +50,11 @@ async def get_currently_playing_song(
     user_id: UUID = Depends(get_current_user_id),
 ):
     return await fetch_current_playing_song(str(user_id))
+
+
+@router.get("/songs/{song_id}/preview")
+async def get_song_preview(
+    song_id: str,
+    user_id: UUID = Depends(get_current_user_id),
+):
+    return await request_song_preview_url(user_id, song_id)

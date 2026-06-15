@@ -42,6 +42,10 @@ class CurrentPlayingSongDTO(BaseModel):
     is_playing: bool
 
 
+class SongPreviewDTO(BaseModel):
+    preview_url: str
+
+
 class SpotifyTrackReviewDataDTO(BaseModel):
     spotify_album_id: str | None
     spotify_artist_id: str | None
