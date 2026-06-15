@@ -19,9 +19,6 @@ services:
     environment:
       POSTGRES_HOST: database
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@database:${POSTGRES_PORT}/${POSTGRES_DB}
-      FRONTEND_URL: ${PUBLIC_URL}
-      CORS_ALLOWED_ORIGINS: ${PUBLIC_URL}
-      SPOTIFY_REDIRECT_URI: ${PUBLIC_URL}/auth/spotify/callback
     ports:
       - "8000:8000"
     depends_on:
