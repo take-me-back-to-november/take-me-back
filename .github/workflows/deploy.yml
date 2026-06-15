@@ -17,16 +17,10 @@ jobs:
       - name: Checkout backend
         uses: actions/checkout@v4
 
-      - name: Checkout frontend
-        uses: actions/checkout@v4
-        with:
-          repository: take-me-back-to-november/take-me-front
-          path: take-me-front
-
       - name: Write .env
         env:
           ENV_FILE: ${{ secrets.ENV_FILE }}
-        run: printf '%s\n' "$ENV_FILE" > take-me-back/.env
+        run: printf '%s\n' "$ENV_FILE" > .env
 
       - name: Create deployment archive
         run: |
@@ -34,7 +28,7 @@ jobs:
             --exclude='.git' \
             --exclude='.venv' \
             --exclude='node_modules' \
-            -czf deploy.tar.gz take-me-back take-me-front
+            -czf deploy.tar.gz .
 
       - name: Copy archive to server
         uses: appleboy/scp-action@v1.0.0
@@ -43,7 +37,7 @@ jobs:
           username: ${{ secrets.USER_PROFILE }}
           key: ${{ secrets.SSH_KEY }}
           source: deploy.tar.gz
-          target: /opt/take-me
+          target: /opt/take-me/take-me-back
 
       - name: Deploy on server
         uses: appleboy/ssh-action@v1.2.0
@@ -54,12 +48,11 @@ jobs:
           script: |
             set -euo pipefail
 
-            mkdir -p /opt/take-me
-            cd /opt/take-me
+            mkdir -p /opt/take-me/take-me-back
+            cd /opt/take-me/take-me-back
 
             tar -xzf deploy.tar.gz
             rm -f deploy.tar.gz
 
-            cd take-me-back
-            docker compose up -d --build --remove-orphans
+            docker compose up -d --build --remove-orphans database api
             docker image prune -f
