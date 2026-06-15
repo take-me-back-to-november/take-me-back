@@ -6,6 +6,7 @@ from tortoise import Tortoise
 
 from config.cors import CORS_ARGS
 from config.tortoise import TORTOISE_ORM
+from errors.global_error_handler import register_exception_handlers
 from instances.http_client import close_http_client, init_http_client
 from routes.action_routes import router as action_router
 from routes.album_review_routes import router as album_review_router
@@ -27,6 +28,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+register_exception_handlers(app)
 
 app.add_middleware(CORSMiddleware, **CORS_ARGS)
 
