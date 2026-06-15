@@ -37,6 +37,10 @@ async def fetch_spotify_profile(access_token: str) -> SpotifyProfileDTO:
         headers={"Authorization": f"Bearer {access_token}"},
     )
 
+    print("--------------------------------")
+    print(response.json())
+    print("--------------------------------")
+
     if response.status_code != 200:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
