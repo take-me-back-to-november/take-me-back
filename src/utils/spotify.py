@@ -1,7 +1,6 @@
 from datetime import UTC, datetime, timedelta
 from typing import Any, Literal
 from urllib.parse import urlencode
-from uuid import UUID
 
 from fastapi import HTTPException, status
 
@@ -12,22 +11,53 @@ from dtos.spotify_dtos import (
     SpotifySongDTO,
     SpotifyTrackReviewDataDTO,
 )
+from dtos.user_dtos import SpotifyProfileDTO
 from instances.http_client import get_http_client
 from models.user import User
 
 
-def build_spotify_authorize_url(user_id: UUID) -> str:
+def build_spotify_authorize_url(state: str) -> str:
     params = urlencode(
         {
             "response_type": "code",
             "client_id": SPOTIFY_CONFIG["client_id"],
             "redirect_uri": SPOTIFY_CONFIG["redirect_uri"],
             "scope": SPOTIFY_CONFIG["scope"],
-            "state": str(user_id),
+            "state": state,
             "show_dialog": "true",
         }
     )
     return f"{SPOTIFY_CONFIG['authorize_url']}?{params}"
+
+
+async def fetch_spotify_profile(access_token: str) -> SpotifyProfileDTO:
+    client = get_http_client()
+    response = await client.get(
+        f"{SPOTIFY_CONFIG['api_base_url']}/me",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+
+    if response.status_code != 200:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Failed to fetch Spotify profile",
+        )
+
+    data = response.json()
+    images = data.get("images") or []
+
+    if not data.get("id"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Spotify profile did not return an id",
+        )
+
+    return SpotifyProfileDTO(
+        id=data["id"],
+        display_name=data.get("display_name"),
+        email=data.get("email"),
+        image_url=images[0].get("url") if images else None,
+    )
 
 
 def validate_spotify_callback_params(code: str, state: str) -> None:

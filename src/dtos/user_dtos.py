@@ -5,31 +5,19 @@ from pydantic import BaseModel
 from dtos.song_review_dtos import SongReviewResponseDTO
 
 
-class CreateUserAndSessionDTO(BaseModel):
-    google_id: str
-
-
-class GoogleUserInfoDTO(BaseModel):
-    sub: str | None
+class SpotifyProfileDTO(BaseModel):
+    id: str
+    display_name: str | None
     email: str | None
-    name: str | None
-    given_name: str | None
-    family_name: str | None
-    picture: str | None
-    hd: str | None
-    email_verified: bool | None
+    image_url: str | None
 
 
 class UserResponseDTO(BaseModel):
     id: UUID
-    google_id: str
-    google_email: str | None
-    email_verified: bool | None
+    spotify_id: str
+    email: str | None
     name: str | None
-    first_name: str | None
-    last_name: str | None
     picture_url: str | None
-    hosted_domain: str | None
 
 
 class AuthResponseDTO(BaseModel):
@@ -65,7 +53,7 @@ class SpotifyCallbackResultDTO(BaseModel):
 class UserResumeDTO(BaseModel):
     id: UUID
     name: str
-    email: str
+    email: str | None
     picture_url: str | None
     spotify_connected: bool
     reviews_count: int

@@ -6,14 +6,10 @@ from models.user import User
 def build_user_response(user: User) -> dict:
     return {
         "id": user.id,
-        "google_id": user.google_id,
-        "google_email": user.google_email,
-        "email_verified": user.email_verified,
+        "spotify_id": user.spotify_id,
+        "email": user.email,
         "name": user.name,
-        "first_name": user.first_name,
-        "last_name": user.last_name,
         "picture_url": user.picture_url,
-        "hosted_domain": user.hosted_domain,
     }
 
 

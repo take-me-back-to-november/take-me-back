@@ -36,6 +36,33 @@ def create_refresh_token() -> str:
     return secrets.token_urlsafe(64)
 
 
+def create_spotify_state_token() -> str:
+    now = datetime.now(UTC)
+    return jwt.encode(
+        payload={
+            "purpose": "spotify_login_state",
+            "nonce": secrets.token_urlsafe(16),
+            "iat": now,
+            "exp": now + timedelta(minutes=10),
+        },
+        key=JWT_CONFIG["secret"],
+        algorithm=JWT_CONFIG["algorithm"],
+    )
+
+
+def verify_spotify_state_token(token: str) -> bool:
+    algorithm = JWT_CONFIG["algorithm"] or "HS256"
+    try:
+        payload = jwt.decode(
+            token,
+            key=JWT_CONFIG["secret"],
+            algorithms=[algorithm],
+        )
+    except jwt.InvalidTokenError:
+        return False
+    return payload.get("purpose") == "spotify_login_state"
+
+
 def decode_jwt_token(token: str) -> JwtPayload:
     algorithm = JWT_CONFIG["algorithm"] or "HS256"
     decoded_payload = jwt.decode(

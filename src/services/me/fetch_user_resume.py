@@ -43,7 +43,7 @@ async def main(user_id: UUID):
     return {
         "id": user.id,
         "name": user.name,
-        "email": user.google_email,
+        "email": user.email,
         "picture_url": user.picture_url,
         "spotify_connected": bool(user.spotify_refresh_token),
         "reviews_count": reviews_count,

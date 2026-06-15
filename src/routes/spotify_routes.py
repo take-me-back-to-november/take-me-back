@@ -11,9 +11,6 @@ from services.spotify.fetch_spotify_tracks import main as fetch_spotify_tracks
 from services.spotify.fetch_user_most_listened_songs import (
     main as fetch_user_most_listened_songs,
 )
-from services.spotify.remove_user_spotify_attachment import (
-    main as remove_spotify_link,
-)
 
 router = APIRouter(prefix="/spotify")
 
@@ -50,10 +47,3 @@ async def get_currently_playing_song(
     user_id: UUID = Depends(get_current_user_id),
 ):
     return await fetch_current_playing_song(str(user_id))
-
-
-@router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
-async def remove_spotify_attachment(
-    user_id: UUID = Depends(get_current_user_id),
-):
-    await remove_spotify_link(user_id)
