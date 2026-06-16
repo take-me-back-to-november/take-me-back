@@ -32,3 +32,8 @@ class SongReviewResponseDTO(BaseModel):
     user: SongReviewUserResponseDTO | None
     created_at: datetime
     updated_at: datetime
+
+
+class SongReviewsPaginatedResponseDTO(BaseModel):
+    items: list[SongReviewResponseDTO]
+    has_next_page: bool

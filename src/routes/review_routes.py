@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query, status
 
 from dependencies.auth import get_current_user_id
-from dtos.song_review_dtos import CreateSongReviewDTO
+from dtos.song_review_dtos import CreateSongReviewDTO, SongReviewsPaginatedResponseDTO
 from services.reviews.create_spotify_song_review import (
     main as create_spotify_song_review,
 )
@@ -23,7 +23,9 @@ async def create_song_review(
     return await create_spotify_song_review(user_id, body)
 
 
-@router.get("", status_code=status.HTTP_200_OK)
+@router.get(
+    "", status_code=status.HTTP_200_OK, response_model=SongReviewsPaginatedResponseDTO
+)
 async def fetch_song_reviews(
     current_user_id: UUID = Depends(get_current_user_id),
     offset: int = Query(default=0),
